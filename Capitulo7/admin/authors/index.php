@@ -2,6 +2,82 @@
 
 	include '../../../includes/db.inc.php';
 
+	if (isset($_GET['add'])) {
+
+		$pageTitle = 'New Author';
+		$action = 'addform';
+		$button = 'Add Author';
+		$name = '';
+		$email = '';
+		$id = '';
+
+		include 'form.html.php';
+		exit();
+	}
+
+	if (isset($_GET['addform'])) {
+		if (isset($_POST['name']) and isset($_POST['email'])) {
+			$name = $_POST['name'];
+			$email = $_POST['email'];
+
+			try {
+				$sql = 'INSERT INTO author (id, name, email) VALUES(null, :name, :email)';
+				$s = $pdo->prepare($sql);
+				$s->bindValue(':name', $name);
+				$s->bindValue(':email', $email);
+				$s->execute();
+			} catch (PDOException $e) {
+				$error = 'Error adding new author.';
+				include 'error.html.php';
+				exit();
+			}
+		}
+	}
+	if (isset($_POST['action']) and $_POST['action'] == 'Edit') {
+		
+		$id = $_POST['id'];
+
+		try {
+			$sql = 'SELECT name, email FROM author WHERE id = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':id', $id);
+			$s->execute();
+			$author = $s->fetch();
+			$name = $author['name'];
+			$email = $author['email'];
+			$pageTitle = 'Edit Author';
+			$action = 'editform';
+			$button = 'Update Author';
+			$id = $_POST['id'];
+
+			include 'form.html.php';
+			exit();
+
+		} catch (PDOException $e) {
+			$error = 'Error finding author to be Edit.';
+			include 'error.html.php';
+			exit();
+		}
+	}
+
+	if (isset($_GET['editform'])) {
+		try {
+			$sql = 'UPDATE author SET name = :name, email = :email WHERE id = :id';
+			$s = $pdo->prepare($sql);
+			$s->bindValue(':name', $_POST['name']);
+			$s->bindValue(':email', $_POST['email']);
+			$s->bindValue(':id', $_POST['id']);
+			$s->execute();
+
+		} catch (PDOException $e) {
+			$error = 'Error editing author.';
+			include 'error.html.php';
+			exit();
+		}
+		header('Location: .');
+		exit();
+	}
+
 	if (isset($_POST['action']) and $_POST['action'] == 'Delete') {
 		
 		$authorid = $_POST['id'];
